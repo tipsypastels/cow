@@ -128,23 +128,23 @@ function makeCommandRegistry() {
   const idMap = new Map<number, Command>();
   const nameMap = new Map<string, Command>();
 
-  const add = (command: Command) => {
+  const add = (name: string, command: Command) => {
     idMap.set(i++, command);
-    nameMap.set(command.name, command);
+    nameMap.set(name, command);
   };
 
-  add(moo);
-  add(mOo);
-  add(moO);
-  add(mOO);
-  add(Moo);
-  add(MOo);
-  add(MoO);
-  add(MOO);
-  add(OOO);
-  add(MMM);
-  add(OOM);
-  add(oom);
+  add("moo", moo);
+  add("mOo", mOo);
+  add("moO", moO);
+  add("mOO", mOO);
+  add("Moo", Moo);
+  add("MOo", MOo);
+  add("MoO", MoO);
+  add("MOO", MOO);
+  add("OOO", OOO);
+  add("MMM", MMM);
+  add("OOM", OOM);
+  add("oom", oom);
 
   return {
     get names() {
