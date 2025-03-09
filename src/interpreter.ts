@@ -68,7 +68,7 @@ export class Cow {
         break;
       }
       default: {
-        command(this);
+        command.call(this);
       }
     }
 

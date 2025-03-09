@@ -5,7 +5,8 @@ export type BadEval =
   | { type: "evalLoop" };
 
 export interface Command {
-  (cow: Cow): void;
+  name: string;
+  call(cow: Cow): void;
 }
 
 /**
@@ -13,38 +14,50 @@ export interface Command {
  * command immediately before this in which case it jumps to the
  * one before that. Does nothing if no `MOO` is found.
  */
-const moo: Command = (cow) => {
-  cow.skipBackUntil((c, i) => i < (cow.progcnt - 1) && c === MOO);
+const moo: Command = {
+  name: "moo",
+  call(cow) {
+    cow.skipBackUntil((c, i) => i < (cow.progcnt - 1) && c === MOO);
+  },
 };
 
 /**
  * Move the cursor backwards.
  */
-const mOo: Command = (cow) => {
-  cow.cursor -= 1;
+const mOo: Command = {
+  name: "mOo",
+  call(cow) {
+    cow.cursor -= 1;
+  },
 };
 
 /**
  * Move the cursor forwards.
  */
-const moO: Command = (cow) => {
-  cow.cursor += 1;
+const moO: Command = {
+  name: "moO",
+  call(cow) {
+    cow.cursor += 1;
+  },
 };
 
 /**
  * Execute the current value as a command. Exit the program if
  * it is invalid, or `3`, which would cause an infinite loop.
  */
-const mOO: Command = (cow) => {
-  const { value } = cow;
-  const command = commandRegistry.getById(value);
-  if (!command) {
-    return cow.badEval({ type: "invalidCommand", value });
-  }
-  if (command === cow.command) {
-    return cow.badEval({ type: "evalLoop" });
-  }
-  command(cow);
+const mOO: Command = {
+  name: "mOO",
+  call(cow) {
+    const { value } = cow;
+    const command = commandRegistry.getById(value);
+    if (!command) {
+      return cow.badEval({ type: "invalidCommand", value });
+    }
+    if (command === cow.command) {
+      return cow.badEval({ type: "evalLoop" });
+    }
+    command.call(cow);
+  },
 };
 
 /**
@@ -52,26 +65,35 @@ const mOO: Command = (cow) => {
  * set the value to that. If nonzero, write the current value
  * as an ASCII char instead.
  */
-const Moo: Command = (cow) => {
-  if (cow.value === 0) {
-    cow.value = cow.io.readChar();
-  } else {
-    cow.io.writeChar(cow.value);
-  }
+const Moo: Command = {
+  name: "Moo",
+  call(cow) {
+    if (cow.value === 0) {
+      cow.value = cow.io.readChar();
+    } else {
+      cow.io.writeChar(cow.value);
+    }
+  },
 };
 
 /**
  * Decrement the current value.
  */
-const MOo: Command = (cow) => {
-  cow.value -= 1;
+const MOo: Command = {
+  name: "MOo",
+  call(cow) {
+    cow.value -= 1;
+  },
 };
 
 /**
  * Increase the current value.
  */
-const MoO: Command = (cow) => {
-  cow.value += 1;
+const MoO: Command = {
+  name: "MoO",
+  call(cow) {
+    cow.value += 1;
+  },
 };
 
 /**
@@ -79,17 +101,23 @@ const MoO: Command = (cow) => {
  * is the very next command in which case use the one after that. If
  * no `moo` is found, exit. If the current value is nonzero, do nothing.
  */
-const MOO: Command = (cow) => {
-  if (cow.value === 0) {
-    cow.skipNextThenToAfterEndpoint();
-  }
+const MOO: Command = {
+  name: "MOO",
+  call(cow) {
+    if (cow.value === 0) {
+      cow.skipNextThenToAfterEndpoint();
+    }
+  },
 };
 
 /**
  * Zero the current value.
  */
-const OOO: Command = (cow) => {
-  cow.value = 0;
+const OOO: Command = {
+  name: "OOO",
+  call(cow) {
+    cow.value = 0;
+  },
 };
 
 /**
@@ -97,27 +125,36 @@ const OOO: Command = (cow) => {
  * register is not empty, set the current value to the register's,
  * then clear the register.
  */
-const MMM: Command = (cow) => {
-  if (cow.register === null) {
-    cow.register = cow.value;
-  } else {
-    cow.value = cow.register;
-    cow.register = null;
-  }
+const MMM: Command = {
+  name: "MMM",
+  call(cow) {
+    if (cow.register === null) {
+      cow.register = cow.value;
+    } else {
+      cow.value = cow.register;
+      cow.register = null;
+    }
+  },
 };
 
 /**
  * Write current value as an integer.
  */
-const OOM: Command = (cow) => {
-  cow.io.writeByte(cow.value);
+const OOM: Command = {
+  name: "OOM",
+  call(cow) {
+    cow.io.writeByte(cow.value);
+  },
 };
 
 /**
  * Read current value as an integer.
  */
-const oom: Command = (cow) => {
-  cow.value = cow.io.readByte();
+const oom: Command = {
+  name: "oom",
+  call(cow) {
+    cow.value = cow.io.readByte();
+  },
 };
 
 export const commandRegistry = makeCommandRegistry();
@@ -128,23 +165,23 @@ function makeCommandRegistry() {
   const idMap = new Map<number, Command>();
   const nameMap = new Map<string, Command>();
 
-  const add = (name: string, command: Command) => {
+  const add = (command: Command) => {
     idMap.set(i++, command);
-    nameMap.set(name, command);
+    nameMap.set(command.name, command);
   };
 
-  add("moo", moo);
-  add("mOo", mOo);
-  add("moO", moO);
-  add("mOO", mOO);
-  add("Moo", Moo);
-  add("MOo", MOo);
-  add("MoO", MoO);
-  add("MOO", MOO);
-  add("OOO", OOO);
-  add("MMM", MMM);
-  add("OOM", OOM);
-  add("oom", oom);
+  add(moo);
+  add(mOo);
+  add(moO);
+  add(mOO);
+  add(Moo);
+  add(MOo);
+  add(MoO);
+  add(MOO);
+  add(OOO);
+  add(MMM);
+  add(OOM);
+  add(oom);
 
   return {
     get names() {
